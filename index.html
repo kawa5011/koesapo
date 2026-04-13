@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>こえサポ - 意思疎通支援ツール</title>
+<style>
+:root {
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --text: #2d2d2d;
+  --text-secondary: #666666;
+  --text-on-btn: #ffffff;
+  --border: #e0ddd5;
+  --shadow: rgba(0,0,0,0.08);
+  --accent: #4a7c59;
+  --header-bg: #ffffff;
+
+  /* Category colors - muted, professional */
+  --cat-basic: #5b7a8a;
+  --cat-body: #c46a4a;
+  --cat-request: #6a7ab5;
+  --cat-care: #8a6aaa;
+  --cat-fav: #c4894a;
+
+  /* Semantic button colors */
+  --btn-ok: #4a7c59;        /* Green: positive/OK */
+  --btn-ok-dark: #3d6649;
+  --btn-danger: #c0453a;    /* Red: negative/abnormal */
+  --btn-danger-dark: #a33a30;
+  --btn-caution: #c48c3a;   /* Amber: caution/body */
+  --btn-caution-dark: #a87830;
+  --btn-request: #4a6a9a;   /* Blue: request */
+  --btn-request-dark: #3d5880;
+  --btn-call: #7a5a9a;      /* Purple: call someone */
+  --btn-call-dark: #654a80;
+  --btn-neutral: #7a8a8a;   /* Gray: neutral */
+  --btn-neutral-dark: #647070;
+  --btn-teal: #4a8a7a;      /* Teal: body parts */
+  --btn-teal-dark: #3d7366;
+
+  --overlay-bg: rgba(0,0,0,0.5);
+  --settings-bg: #ffffff;
+  --spoken-bg: #eef5ee;
+  --spoken-border: #4a7c59;
+  --spoken-text: #3d6649;
+  --progress-bg: rgba(255,255,255,0.35);
+  --back-bg: #5b7a8a;
+  --back-text: #ffffff;
+  --fav-tag-bg: rgba(0,0,0,0.2);
+  --fav-tag-active-bg: rgba(255,200,50,0.4);
+  --popup-bg: rgba(0,0,0,0.75);
+  --popup-text: #ffffff;
+}
+[data-theme="dark"] {
+  --bg: #1c1c1e;
+  --surface: #2c2c2e;
+  --text: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --text-on-btn: #ffffff;
+  --border: #3a3a3c;
+  --shadow: rgba(0,0,0,0.4);
+  --accent: #6aaa7a;
+  --header-bg: #2c2c2e;
+
+  --cat-basic: #6a8a9a;
+  --cat-body: #d47a5a;
+  --cat-request: #7a8ac5;
+  --cat-care: #9a7aba;
+  --cat-fav: #d49a5a;
+
+  --btn-ok: #5a9a6a;
+  --btn-ok-dark: #4a8a5a;
+  --btn-danger: #d05a50;
+  --btn-danger-dark: #c04a40;
+  --btn-caution: #d49a4a;
+  --btn-caution-dark: #c48a3a;
+  --btn-request: #5a7aaa;
+  --btn-request-dark: #4a6a9a;
+  --btn-call: #8a6aaa;
+  --btn-call-dark: #7a5a9a;
+  --btn-neutral: #8a9a9a;
+  --btn-neutral-dark: #7a8a8a;
+  --btn-teal: #5a9a8a;
+  --btn-teal-dark: #4a8a7a;
+
+  --overlay-bg: rgba(0,0,0,0.7);
+  --settings-bg: #2c2c2e;
+  --spoken-bg: rgba(90,154,106,0.15);
+  --spoken-border: #6aaa7a;
+  --spoken-text: #8acca0;
+  --progress-bg: rgba(255,255,255,0.2);
+  --back-bg: #4a6a7a;
+  --back-text: #f0f0f0;
+  --fav-tag-bg: rgba(255,255,255,0.15);
+  --fav-tag-active-bg: rgba(255,200,50,0.35);
+  --popup-bg: rgba(0,0,0,0.85);
+  --popup-text: #ffffff;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  height:100%; overflow:hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  background:var(--bg); color:var(--text);
+  -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+}
+.app { display:flex; flex-direction:column; height:100%; height:100dvh; }
+
+/* Header */
+.header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:6px 12px; background:var(--header-bg);
+  border-bottom:1px solid var(--border); flex-shrink:0; min-height:48px;
+}
+.header-left { display:flex; align-items:center; gap:10px; }
+.back-btn {
+  display:none; align-items:center; justify-content:center; gap:6px;
+  padding:10px 22px; border:none; border-radius:14px;
+  background:var(--back-bg); color:var(--back-text);
+  font-size:1.2rem; font-weight:700; cursor:pointer;
+  min-height:50px; min-width:120px;
+}
+.back-btn.visible { display:flex; }
+.header-title { font-size:1.1rem; font-weight:700; }
+.header-actions { display:flex; gap:6px; }
+.icon-btn {
+  width:42px; height:42px; border:1px solid var(--border); border-radius:10px;
+  background:var(--surface); color:var(--text); font-size:1.15rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* Spoken Bar */
+.spoken-bar {
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  gap:12px; padding:10px 16px; background:var(--spoken-bg);
+  border-bottom:3px solid var(--spoken-border); min-height:56px;
+}
+.spoken-bar.empty { opacity:0.4; }
+.spoken-text { font-size:1.3rem; font-weight:700; color:var(--spoken-text); flex:1; text-align:center; }
+.repeat-btn {
+  padding:10px 20px; border:3px solid var(--spoken-border); border-radius:12px;
+  background:transparent; color:var(--spoken-text); font-size:1.1rem; font-weight:700;
+  cursor:pointer; white-space:nowrap; min-width:100px; min-height:48px;
+}
+.repeat-btn:active { background:var(--spoken-border); color:white; }
+
+/* Popup - big center display on speak */
+.speak-popup {
+  display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:var(--popup-bg); color:var(--popup-text);
+  font-size:3rem; font-weight:800; padding:30px 50px;
+  border-radius:24px; z-index:50; text-align:center;
+  min-width:60%; max-width:90%;
+  animation: popIn 0.2s ease-out;
+}
+.speak-popup.visible { display:block; }
+@keyframes popIn {
+  from { transform:translate(-50%,-50%) scale(0.8); opacity:0; }
+  to { transform:translate(-50%,-50%) scale(1); opacity:1; }
+}
+
+/* Content */
+.content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px; }
+
+/* Category Grid */
+.category-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; max-width:900px; margin:0 auto; }
+.cat-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; border:none; border-radius:20px;
+  font-size:1.8rem; font-weight:800; color:var(--text-on-btn);
+  cursor:pointer; padding:24px 16px; min-height:140px;
+  box-shadow:0 4px 12px var(--shadow); transition:transform 0.1s;
+}
+.cat-btn:active { transform:scale(0.96); }
+.cat-btn .cat-icon { font-size:2.2rem; margin-bottom:8px; }
+.cat-btn .cat-count { font-size:0.9rem; font-weight:500; opacity:0.8; margin-top:4px; }
+.cat-basic { background:var(--cat-basic); }
+.cat-body { background:var(--cat-body); }
+.cat-request { background:var(--cat-request); }
+.cat-care { background:var(--cat-care); }
+.cat-fav { background:var(--cat-fav); }
+
+/* Quick Access on Home */
+.quick-section { max-width:900px; margin:0 auto 14px; }
+.quick-title { font-size:1rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px; padding-left:4px; }
+.quick-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+
+/* Item Grid */
+.item-grid { display:grid; gap:12px; max-width:900px; margin:0 auto; }
+.item-grid.cols-1 { grid-template-columns:1fr; }
+.item-grid.cols-2 { grid-template-columns:repeat(2,1fr); }
+
+.comm-btn {
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; border:none; border-radius:18px;
+  font-size:2rem; font-weight:700; color:var(--text-on-btn);
+  cursor:pointer; padding:20px 16px 36px; min-height:120px;
+  box-shadow:0 4px 12px var(--shadow); overflow:hidden; line-height:1.3;
+}
+.comm-btn .progress {
+  position:absolute; left:0; bottom:0; height:100%; width:0%;
+  background:var(--progress-bg); border-radius:18px; pointer-events:none;
+}
+.comm-btn .btn-text { position:relative; z-index:2; }
+
+/* Favorite tag - clearly visible */
+.comm-btn .fav-tag {
+  position:absolute; bottom:6px; right:8px; z-index:3;
+  padding:3px 10px; border-radius:8px;
+  background:var(--fav-tag-bg); color:rgba(255,255,255,0.85);
+  font-size:0.7rem; font-weight:600;
+  display:flex; align-items:center; gap:3px;
+}
+.comm-btn .fav-tag.is-fav {
+  background:var(--fav-tag-active-bg); color:#fff;
+}
+
+.comm-btn.speaking { animation: glow 0.6s ease-in-out infinite alternate; }
+@keyframes glow {
+  from { box-shadow:0 0 0 5px rgba(255,255,255,0.4), 0 4px 12px var(--shadow); }
+  to { box-shadow:0 0 0 8px rgba(255,255,255,0.7), 0 4px 24px var(--shadow); }
+}
+
+/* Semantic colors */
+.btn-ok { background:var(--btn-ok); }
+.btn-danger { background:var(--btn-danger); }
+.btn-caution { background:var(--btn-caution); }
+.btn-request { background:var(--btn-request); }
+.btn-call { background:var(--btn-call); }
+.btn-neutral { background:var(--btn-neutral); }
+.btn-teal { background:var(--btn-teal); }
+
+/* Body Part */
+.bodypart-btn {
+  position:relative; display:flex; align-items:center; justify-content:center;
+  text-align:center; border:none; border-radius:18px;
+  font-size:2rem; font-weight:700; color:var(--text-on-btn);
+  cursor:pointer; padding:20px 16px; min-height:110px;
+  box-shadow:0 4px 12px var(--shadow); overflow:hidden;
+  background:var(--btn-teal);
+}
+.bodypart-btn .progress {
+  position:absolute; left:0; bottom:0; height:100%; width:0%;
+  background:var(--progress-bg); border-radius:18px; pointer-events:none;
+}
+.bodypart-btn .btn-text { position:relative; z-index:2; }
+.bodypart-btn:active { transform:scale(0.96); }
+.bodypart-btn.speaking { animation: glow 0.6s ease-in-out infinite alternate; }
+
+/* Side selector */
+.side-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:900px; margin:0 auto; }
+.side-btn {
+  position:relative; display:flex; align-items:center; justify-content:center;
+  text-align:center; border:none; border-radius:18px;
+  font-size:1.8rem; font-weight:700; color:var(--text-on-btn);
+  cursor:pointer; padding:20px 16px; min-height:120px;
+  box-shadow:0 4px 12px var(--shadow); overflow:hidden;
+}
+.side-btn .progress {
+  position:absolute; left:0; bottom:0; height:100%; width:0%;
+  background:var(--progress-bg); border-radius:18px; pointer-events:none;
+}
+.side-btn .btn-text { position:relative; z-index:2; }
+.side-btn:active { transform:scale(0.96); }
+.side-left { background:var(--btn-request); }
+.side-right { background:var(--btn-caution); }
+.side-both { background:var(--btn-call); }
+
+.flow-header {
+  text-align:center; font-size:1.4rem; font-weight:700;
+  color:var(--text); padding:10px 0 14px;
+}
+.flow-header .flow-highlight { color:var(--btn-danger); font-size:1.5rem; }
+
+/* View Toggle */
+.view-toggle { display:flex; justify-content:flex-end; gap:8px; margin-bottom:10px; max-width:900px; margin-left:auto; margin-right:auto; }
+.view-toggle-btn {
+  width:44px; height:44px; border:2px solid var(--border); border-radius:10px;
+  background:var(--surface); color:var(--text); font-size:1rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.view-toggle-btn.active { border-color:var(--accent); background:var(--accent); color:white; }
+
+/* Settings */
+.overlay { display:none; position:fixed; inset:0; background:var(--overlay-bg); z-index:100; align-items:center; justify-content:center; padding:16px; }
+.overlay.open { display:flex; }
+.settings-panel {
+  background:var(--settings-bg); border-radius:20px; padding:24px; width:100%;
+  max-width:600px; max-height:85vh; overflow-y:auto; -webkit-overflow-scrolling:touch; color:var(--text);
+}
+.settings-panel h2 { font-size:1.3rem; margin-bottom:20px; }
+.settings-section { margin-bottom:24px; }
+.settings-section h3 { font-size:1.05rem; margin-bottom:12px; color:var(--text-secondary); }
+.setting-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border); gap:12px; }
+.setting-row label { font-size:1rem; font-weight:600; }
+.toggle { position:relative; width:52px; height:28px; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-slider { position:absolute; inset:0; background:var(--border); border-radius:28px; cursor:pointer; transition:background 0.3s; }
+.toggle-slider::before { content:''; position:absolute; width:22px; height:22px; left:3px; top:3px; background:white; border-radius:50%; transition:transform 0.3s; }
+.toggle input:checked + .toggle-slider { background:var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform:translateX(24px); }
+.speed-control { display:flex; align-items:center; gap:10px; }
+.speed-control input[type="range"] { flex:1; height:8px; -webkit-appearance:none; background:var(--border); border-radius:4px; outline:none; }
+.speed-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:28px; height:28px; border-radius:50%; background:var(--accent); cursor:pointer; }
+.speed-label { min-width:80px; text-align:center; font-weight:600; font-size:0.9rem; }
+.edit-category { margin-bottom:18px; }
+.edit-category h4 { font-size:1rem; margin-bottom:8px; color:var(--accent); }
+.edit-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.edit-item input { flex:1; padding:12px; border:2px solid var(--border); border-radius:10px; font-size:1rem; background:var(--bg); color:var(--text); }
+.edit-item input:focus { outline:none; border-color:var(--accent); }
+.small-btn { padding:10px 14px; border:none; border-radius:10px; font-size:0.9rem; font-weight:600; cursor:pointer; white-space:nowrap; min-height:44px; }
+.btn-del { background:var(--btn-danger); color:white; }
+.btn-add { background:var(--accent); color:white; width:100%; padding:12px; margin-top:4px; }
+.settings-footer { display:flex; gap:12px; margin-top:20px; }
+.settings-footer button { flex:1; padding:16px; border:none; border-radius:14px; font-size:1.1rem; font-weight:700; cursor:pointer; min-height:54px; }
+.btn-save { background:var(--accent); color:white; }
+.btn-cancel { background:var(--surface); color:var(--text); border:2px solid var(--border); }
+
+@media (orientation: landscape) {
+  .category-grid { grid-template-columns:repeat(3,1fr); }
+  .cat-btn { min-height:110px; font-size:1.5rem; }
+  .comm-btn,.bodypart-btn { min-height:100px; font-size:1.6rem; }
+  .item-grid.cols-2 { grid-template-columns:repeat(3,1fr); }
+  .quick-grid { grid-template-columns:repeat(3,1fr); }
+}
+@media (min-width:1024px) {
+  .category-grid { grid-template-columns:repeat(3,1fr); gap:18px; }
+  .cat-btn { min-height:160px; font-size:2rem; }
+  .comm-btn,.bodypart-btn { min-height:140px; font-size:2.2rem; }
+}
+@media (max-width:400px) {
+  .cat-btn { min-height:110px; font-size:1.4rem; padding:16px 10px; }
+  .comm-btn,.bodypart-btn { font-size:1.5rem; min-height:100px; padding:16px 10px 30px; }
+}
+:fullscreen .app, :-webkit-full-screen .app { height:100vh; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <button class="back-btn" id="btnBack">← 戻る</button>
+      <div class="header-title" id="headerTitle">こえサポ</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btnFullscreen">⛶</button>
+      <button class="icon-btn" id="btnTheme">🌙</button>
+      <button class="icon-btn" id="btnSettings">⚙</button>
+    </div>
+  </div>
+  <div class="spoken-bar empty" id="spokenBar">
+    <span class="spoken-text" id="spokenText">ここに発話内容が表示されます</span>
+    <button class="repeat-btn" id="btnRepeat">もう一度</button>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<!-- Center popup for spoken text -->
+<div class="speak-popup" id="speakPopup"></div>
+
+<!-- Settings -->
+<div class="overlay" id="settingsOverlay">
+  <div class="settings-panel">
+    <h2>設定</h2>
+    <div class="settings-section">
+      <h3>操作</h3>
+      <div class="setting-row"><label>長押しで確定</label><label class="toggle"><input type="checkbox" id="toggleLongPress" checked><span class="toggle-slider"></span></label></div>
+      <div class="setting-row"><label>長押し時間</label><div class="speed-control"><span class="speed-label" id="holdLabel">0.7秒</span><input type="range" id="holdSlider" min="300" max="1500" step="100" value="700"></div></div>
+    </div>
+    <div class="settings-section">
+      <h3>音声</h3>
+      <div class="setting-row"><label>読み上げ速度</label><div class="speed-control"><span class="speed-label" id="speedLabel">ゆっくり</span><input type="range" id="speedSlider" min="0.5" max="1.5" step="0.1" value="0.8"></div></div>
+      <div class="setting-row"><label>音声の高さ</label><div class="speed-control"><span class="speed-label" id="pitchLabel">普通</span><input type="range" id="pitchSlider" min="0.5" max="2.0" step="0.1" value="1.0"></div></div>
+    </div>
+    <div class="settings-section"><h3>選択肢の編集</h3><div id="editArea"></div></div>
+    <div class="settings-footer">
+      <button class="btn-cancel" id="btnSettingsCancel">キャンセル</button>
+      <button class="btn-save" id="btnSettingsSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BODY_PARTS = [
+  { text:"目", icon:"👁", needsSide:true },
+  { text:"耳", icon:"👂", needsSide:true },
+  { text:"鼻", icon:"👃", needsSide:false },
+  { text:"口", icon:"👄", needsSide:false },
+  { text:"喉", icon:"🫁", needsSide:false },
+  { text:"腕", icon:"💪", needsSide:true },
+  { text:"手", icon:"✋", needsSide:true },
+  { text:"足", icon:"🦶", needsSide:true },
+  { text:"頭", icon:"🧠", needsSide:false },
+  { text:"お腹", icon:"🤢", needsSide:false },
+  { text:"胸", icon:"🫀", needsSide:false },
+  { text:"背中", icon:"🔙", needsSide:false }
+];
+
+const DEFAULT_DATA = {
+  categories: [
+    { name:"基本応答", icon:"💬", colorClass:"cat-basic", items:[
+      { text:"はい", color:"ok" },
+      { text:"ありがとう", color:"ok" },
+      { text:"大丈夫", color:"ok" },
+      { text:"いいえ", color:"danger" },
+      { text:"わからない", color:"neutral" },
+      { text:"もう一度言ってください", color:"neutral" }
+    ]},
+    { name:"体調", icon:"🩺", colorClass:"cat-body", items:[
+      { text:"問題ない", color:"ok" },
+      { text:"痛い", color:"danger", action:"bodypart" },
+      { text:"苦しい", color:"danger" },
+      { text:"気持ち悪い", color:"caution" },
+      { text:"しびれる", color:"caution", action:"bodypart" },
+      { text:"寒い", color:"caution" },
+      { text:"暑い", color:"caution" }
+    ]},
+    { name:"要望", icon:"🙏", colorClass:"cat-request", items:[
+      { text:"水が飲みたい", color:"request" },
+      { text:"体勢を変えたい", color:"request" },
+      { text:"トイレ", color:"request" },
+      { text:"テレビをつけて", color:"request" },
+      { text:"電気を消して", color:"request" },
+      { text:"時間を教えて", color:"request" }
+    ]},
+    { name:"介助依頼", icon:"🔔", colorClass:"cat-care", items:[
+      { text:"看護師さんを呼んで", color:"call" },
+      { text:"家族を呼んで", color:"call" },
+      { text:"先生を呼んで", color:"call" },
+      { text:"痰の吸引をして", color:"caution" },
+      { text:"口を潤して", color:"request" },
+      { text:"背中をさすって", color:"request" }
+    ]}
+  ],
+  favorites:[], usageCount:{},
+  speed:0.8, pitch:1.0, theme:"light",
+  longPress:true, holdDuration:700, columns:2
+};
+
+let data = loadData();
+let currentView = "home";
+let lastSpokenText = "";
+let holdInterval = null, holdStartTime = 0, holdAnimFrame = null, currentHoldBtn = null;
+let painWord = "", selectedPart = null;
+let popupTimer = null;
+
+// iOS
+let speechUnlocked = false;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function unlockSpeech() {
+  if (speechUnlocked || !("speechSynthesis" in window)) return;
+  const s = new SpeechSynthesisUtterance(""); s.volume=0; s.lang="ja-JP";
+  window.speechSynthesis.speak(s); speechUnlocked = true;
+}
+document.addEventListener("touchstart", unlockSpeech, {once:true});
+document.addEventListener("click", unlockSpeech, {once:true});
+
+function loadData() {
+  try { const s=localStorage.getItem("koesapo_v4"); if(s) return {...DEFAULT_DATA,...JSON.parse(s)}; } catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function saveData() { try { localStorage.setItem("koesapo_v4", JSON.stringify(data)); } catch(e){} }
+
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", data.theme);
+  document.getElementById("btnTheme").textContent = data.theme==="dark" ? "☀":"🌙";
+}
+function toggleTheme() { data.theme = data.theme==="dark"?"light":"dark"; applyTheme(); saveData(); }
+
+function loadVoices() { if("speechSynthesis" in window) window.speechSynthesis.getVoices(); }
+
+function speak(text, btnEl) {
+  if(!("speechSynthesis" in window)){alert("音声合成非対応");return;}
+  window.speechSynthesis.cancel();
+  const doSpeak=()=>{
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="ja-JP"; u.rate=data.speed; u.pitch=data.pitch;
+    const v=window.speechSynthesis.getVoices();
+    const ja=v.find(x=>x.lang.startsWith("ja"));
+    if(ja) u.voice=ja;
+    if(btnEl){
+      btnEl.classList.add("speaking");
+      u.onend=()=>btnEl.classList.remove("speaking");
+      u.onerror=()=>btnEl.classList.remove("speaking");
+      setTimeout(()=>btnEl.classList.remove("speaking"),5000);
+    }
+    window.speechSynthesis.speak(u);
+    lastSpokenText=text;
+    updateSpokenBar(text);
+    showPopup(text);
+    trackUsage(text);
+  };
+  if(isIOS) setTimeout(doSpeak,50); else doSpeak();
+}
+
+function updateSpokenBar(text) {
+  document.getElementById("spokenText").textContent = "💬 "+text;
+  document.getElementById("spokenBar").classList.remove("empty");
+}
+
+function showPopup(text) {
+  const p = document.getElementById("speakPopup");
+  p.textContent = text;
+  p.classList.add("visible");
+  if(popupTimer) clearTimeout(popupTimer);
+  popupTimer = setTimeout(()=>p.classList.remove("visible"), 2000);
+}
+
+// Usage tracking for top items
+function trackUsage(text) {
+  if(!data.usageCount) data.usageCount = {};
+  data.usageCount[text] = (data.usageCount[text]||0) + 1;
+  saveData();
+}
+function getTopUsed(n) {
+  if(!data.usageCount) return [];
+  const entries = Object.entries(data.usageCount).sort((a,b)=>b[1]-a[1]).slice(0,n);
+  const allItems = [];
+  data.categories.forEach(c=>c.items.forEach(it=>allItems.push(it)));
+  return entries.map(([text])=>allItems.find(it=>it.text===text)).filter(Boolean);
+}
+
+// Favorites
+function isFavorite(text) { return data.favorites.includes(text); }
+function toggleFavorite(text) {
+  const i=data.favorites.indexOf(text);
+  if(i>=0) data.favorites.splice(i,1); else data.favorites.push(text);
+  saveData(); render();
+}
+function getFavoriteItems() {
+  const items=[];
+  data.categories.forEach(c=>c.items.forEach(it=>{if(data.favorites.includes(it.text))items.push({...it});}));
+  return items;
+}
+
+// Long press
+function startHold(btn, callback, progressEl) {
+  unlockSpeech();
+  if(!data.longPress){callback();return;}
+  currentHoldBtn=btn; holdStartTime=Date.now();
+  if(holdInterval) clearInterval(holdInterval);
+  holdInterval=setInterval(()=>{
+    const elapsed=Date.now()-holdStartTime;
+    const pct=Math.min((elapsed/data.holdDuration)*100,100);
+    progressEl.style.width=pct+"%";
+    if(elapsed>=data.holdDuration){
+      clearInterval(holdInterval); holdInterval=null;
+      progressEl.style.width="0%"; callback(); currentHoldBtn=null;
+    }
+  },16);
+}
+function cancelHold(progressEl) {
+  if(holdInterval){clearInterval(holdInterval);holdInterval=null;}
+  if(holdAnimFrame){cancelAnimationFrame(holdAnimFrame);holdAnimFrame=null;}
+  holdStartTime=0; currentHoldBtn=null;
+  if(progressEl) progressEl.style.width="0%";
+}
+
+function render() {
+  const back=document.getElementById("btnBack"), title=document.getElementById("headerTitle");
+  if(currentView==="home"){ back.classList.remove("visible"); title.textContent="こえサポ"; renderHome(); }
+  else if(currentView==="bodypart"){ back.classList.add("visible"); title.textContent="🩺 どこが"+painWord+"？"; renderBodyParts(); }
+  else if(currentView==="side"){ back.classList.add("visible"); title.textContent="🩺 "+selectedPart.text; renderSideSelect(); }
+  else if(currentView==="favorites"){ back.classList.add("visible"); title.textContent="⭐ よく使う"; renderItems(getFavoriteItems()); }
+  else { back.classList.add("visible"); const cat=data.categories[currentView]; title.textContent=(cat.icon||"")+" "+cat.name; renderItems(cat.items); }
+}
+
+function renderHome() {
+  const c=document.getElementById("content");
+  let h='';
+
+  // Quick access: top used items
+  const top = getTopUsed(4);
+  if(top.length > 0) {
+    h += '<div class="quick-section"><div class="quick-title">▼ よく使う</div><div class="quick-grid">';
+    top.forEach((item,idx) => {
+      h += '<button class="comm-btn btn-'+item.color+'" data-quick="'+idx+'" style="min-height:90px;font-size:1.5rem;padding-bottom:20px;">' +
+        '<div class="progress"></div><span class="btn-text">'+item.text+'</span></button>';
+    });
+    h += '</div></div>';
+  }
+
+  h += '<div class="category-grid">';
+  const fav=getFavoriteItems();
+  if(fav.length>0){
+    h+='<button class="cat-btn cat-fav" data-action="fav"><span class="cat-icon">⭐</span><span>よく使う</span><span class="cat-count">'+fav.length+'項目</span></button>';
+  }
+  data.categories.forEach((cat,i)=>{
+    h+='<button class="cat-btn '+cat.colorClass+'" data-action="cat" data-index="'+i+'"><span class="cat-icon">'+(cat.icon||'')+'</span><span>'+cat.name+'</span><span class="cat-count">'+cat.items.length+'項目</span></button>';
+  });
+  h+='</div>';
+  c.innerHTML=h;
+
+  // Quick access events
+  c.querySelectorAll("[data-quick]").forEach(btn=>{
+    const idx=parseInt(btn.dataset.quick);
+    const item=top[idx];
+    const progressEl=btn.querySelector(".progress");
+    const cb=()=>{
+      speak(item.text, btn);
+      if(item.action==="bodypart"){ painWord=item.text; setTimeout(()=>{currentView="bodypart";render();},800); }
+    };
+    bindHold(btn, cb, progressEl);
+  });
+
+  c.querySelectorAll("[data-action='cat']").forEach(b=>b.addEventListener("click",()=>{currentView=parseInt(b.dataset.index);render();}));
+  c.querySelectorAll("[data-action='fav']").forEach(b=>b.addEventListener("click",()=>{currentView="favorites";render();}));
+}
+
+function renderItems(items) {
+  const c=document.getElementById("content");
+  const cols=data.columns||2;
+  let h='<div class="view-toggle">'+
+    '<button class="view-toggle-btn '+(cols===1?'active':'')+'" data-cols="1">▮</button>'+
+    '<button class="view-toggle-btn '+(cols===2?'active':'')+'" data-cols="2">▮▮</button></div>';
+  h+='<div class="item-grid cols-'+cols+'">';
+  items.forEach((item,idx)=>{
+    const fav=isFavorite(item.text);
+    h+='<button class="comm-btn btn-'+(item.color||'request')+'" data-idx="'+idx+'">'+
+      '<div class="progress"></div><span class="btn-text">'+item.text+'</span>'+
+      '<span class="fav-tag'+(fav?' is-fav':'')+'" data-fav="'+idx+'">'+(fav?'★ 登録済':'☆ よく使うに追加')+'</span></button>';
+  });
+  h+='</div>';
+  c.innerHTML=h;
+
+  c.querySelectorAll("[data-cols]").forEach(b=>b.addEventListener("click",()=>{data.columns=parseInt(b.dataset.cols);saveData();render();}));
+
+  c.querySelectorAll(".comm-btn").forEach(btn=>{
+    const idx=parseInt(btn.dataset.idx); const item=items[idx];
+    const progressEl=btn.querySelector(".progress");
+    const cb=()=>{
+      speak(item.text,btn);
+      if(item.action==="bodypart"){ painWord=item.text; setTimeout(()=>{currentView="bodypart";render();},800); }
+    };
+    bindHold(btn, cb, progressEl);
+  });
+
+  c.querySelectorAll(".fav-tag").forEach(tag=>{
+    tag.addEventListener("click",e=>{e.stopPropagation();toggleFavorite(items[parseInt(tag.dataset.fav)].text);});
+    tag.addEventListener("touchstart",e=>e.stopPropagation());
+    tag.addEventListener("touchend",e=>{e.stopPropagation();e.preventDefault();toggleFavorite(items[parseInt(tag.dataset.fav)].text);});
+  });
+}
+
+function renderBodyParts() {
+  const c=document.getElementById("content");
+  let h='<div class="flow-header">「<span class="flow-highlight">'+painWord+'</span>」→ どこですか？</div>';
+  h+='<div class="item-grid cols-2">';
+  BODY_PARTS.forEach((part,idx)=>{
+    h+='<button class="bodypart-btn" data-idx="'+idx+'"><div class="progress"></div><span class="btn-text">'+part.icon+' '+part.text+'</span></button>';
+  });
+  h+='</div>';
+  c.innerHTML=h;
+  c.querySelectorAll(".bodypart-btn").forEach(btn=>{
+    const part=BODY_PARTS[parseInt(btn.dataset.idx)];
+    const progressEl=btn.querySelector(".progress");
+    const cb=()=>{
+      if(part.needsSide){ selectedPart=part; currentView="side"; render(); }
+      else { speak(part.text+"が"+painWord, btn); }
+    };
+    bindHold(btn, cb, progressEl);
+  });
+}
+
+function renderSideSelect() {
+  const c=document.getElementById("content");
+  let h='<div class="flow-header">「<span class="flow-highlight">'+selectedPart.icon+' '+selectedPart.text+'</span>」→ どちら側？</div>';
+  h+='<div class="side-grid">';
+  const sides=[{label:"左",cls:"side-left",prefix:"左"},{label:"右",cls:"side-right",prefix:"右"},{label:"両方",cls:"side-both",prefix:"両方の"}];
+  sides.forEach((s,idx)=>{
+    h+='<button class="side-btn '+s.cls+'" data-idx="'+idx+'"><div class="progress"></div><span class="btn-text">'+s.label+'</span></button>';
+  });
+  h+='</div>';
+  c.innerHTML=h;
+  c.querySelectorAll(".side-btn").forEach(btn=>{
+    const side=sides[parseInt(btn.dataset.idx)];
+    const progressEl=btn.querySelector(".progress");
+    const cb=()=>speak(side.prefix+selectedPart.text+"が"+painWord, btn);
+    bindHold(btn, cb, progressEl);
+  });
+}
+
+// Shared hold binding
+function bindHold(btn, callback, progressEl) {
+  btn.addEventListener("touchstart",e=>{if(e.target.closest(".fav-tag"))return;e.preventDefault();startHold(btn,callback,progressEl);},{passive:false});
+  btn.addEventListener("touchend",e=>{e.preventDefault();if(data.longPress&&currentHoldBtn===btn)cancelHold(progressEl);});
+  btn.addEventListener("touchcancel",()=>cancelHold(progressEl));
+  btn.addEventListener("mousedown",e=>{if(e.target.closest(".fav-tag"))return;startHold(btn,callback,progressEl);});
+  btn.addEventListener("mouseup",()=>{if(data.longPress&&currentHoldBtn===btn)cancelHold(progressEl);});
+  btn.addEventListener("mouseleave",()=>cancelHold(progressEl));
+}
+
+function goBack() {
+  if(currentView==="side"){currentView="bodypart";}
+  else if(currentView==="bodypart"){const i=data.categories.findIndex(c=>c.name==="体調");currentView=i>=0?i:"home";}
+  else{currentView="home";}
+  render();
+}
+
+function toggleFullscreen() {
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+    const el=document.documentElement;
+    if(el.requestFullscreen)el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
+  } else {
+    if(document.exitFullscreen)document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
+  }
+}
+
+function openSettings() {
+  document.getElementById("toggleLongPress").checked=data.longPress;
+  document.getElementById("holdSlider").value=data.holdDuration; updateHoldLabel(data.holdDuration);
+  document.getElementById("speedSlider").value=data.speed; updateSpeedLabel(data.speed);
+  document.getElementById("pitchSlider").value=data.pitch; updatePitchLabel(data.pitch);
+  renderEditArea();
+  document.getElementById("settingsOverlay").classList.add("open");
+}
+function closeSettings(){document.getElementById("settingsOverlay").classList.remove("open");}
+
+function renderEditArea() {
+  const area=document.getElementById("editArea"); area.innerHTML="";
+  data.categories.forEach((cat,ci)=>{
+    const div=document.createElement("div");div.className="edit-category";
+    const h4=document.createElement("h4");h4.textContent=(cat.icon||"")+" "+cat.name;div.appendChild(h4);
+    cat.items.forEach((item,ii)=>{
+      const row=document.createElement("div");row.className="edit-item";
+      const input=document.createElement("input");input.type="text";input.value=item.text;input.dataset.cat=ci;input.dataset.item=ii;
+      const del=document.createElement("button");del.className="small-btn btn-del";del.textContent="削除";
+      del.addEventListener("click",()=>{data.categories[ci].items.splice(ii,1);renderEditArea();});
+      row.appendChild(input);row.appendChild(del);div.appendChild(row);
+    });
+    const add=document.createElement("button");add.className="small-btn btn-add";add.textContent="＋ 追加";
+    add.addEventListener("click",()=>{data.categories[ci].items.push({text:"新しい項目",color:"request"});renderEditArea();});
+    div.appendChild(add);area.appendChild(div);
+  });
+}
+
+function saveSettings() {
+  data.longPress=document.getElementById("toggleLongPress").checked;
+  data.holdDuration=parseInt(document.getElementById("holdSlider").value);
+  data.speed=parseFloat(document.getElementById("speedSlider").value);
+  data.pitch=parseFloat(document.getElementById("pitchSlider").value);
+  document.querySelectorAll("#editArea input[data-cat]").forEach(input=>{
+    const ci=parseInt(input.dataset.cat),ii=parseInt(input.dataset.item);
+    if(data.categories[ci]&&data.categories[ci].items[ii])data.categories[ci].items[ii].text=input.value;
+  });
+  saveData();render();closeSettings();
+}
+
+function updateSpeedLabel(v){v=parseFloat(v);document.getElementById("speedLabel").textContent=v<=0.6?"とてもゆっくり":v<=0.8?"ゆっくり":v<=1.1?"普通":v<=1.3?"速い":"とても速い";}
+function updatePitchLabel(v){v=parseFloat(v);document.getElementById("pitchLabel").textContent=v<=0.7?"低い":v<=1.2?"普通":v<=1.6?"高い":"とても高い";}
+function updateHoldLabel(v){document.getElementById("holdLabel").textContent=(parseInt(v)/1000).toFixed(1)+"秒";}
+
+document.getElementById("btnBack").addEventListener("click",goBack);
+document.getElementById("btnTheme").addEventListener("click",toggleTheme);
+document.getElementById("btnFullscreen").addEventListener("click",toggleFullscreen);
+document.getElementById("btnSettings").addEventListener("click",openSettings);
+document.getElementById("btnSettingsCancel").addEventListener("click",closeSettings);
+document.getElementById("btnSettingsSave").addEventListener("click",saveSettings);
+document.getElementById("btnRepeat").addEventListener("click",()=>{if(lastSpokenText)speak(lastSpokenText,null);});
+document.getElementById("speedSlider").addEventListener("input",e=>updateSpeedLabel(e.target.value));
+document.getElementById("pitchSlider").addEventListener("input",e=>updatePitchLabel(e.target.value));
+document.getElementById("holdSlider").addEventListener("input",e=>updateHoldLabel(e.target.value));
+document.getElementById("settingsOverlay").addEventListener("click",e=>{if(e.target===document.getElementById("settingsOverlay"))closeSettings();});
+if("speechSynthesis" in window){window.speechSynthesis.onvoiceschanged=loadVoices;loadVoices();}
+applyTheme();render();
+</script>
+</body>
+</html>
